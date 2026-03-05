@@ -166,7 +166,7 @@ header {
 	justify-content: center;
 	align-items: center;
 	position: relative;
-	padding: 0 60px;
+	padding: 0 55px;
 }
 
 /* Christmas Decorations */
@@ -1641,4 +1641,5 @@ footer {
 	.contact-info {
 		padding: 30px 20px;
 	}
+
 }
