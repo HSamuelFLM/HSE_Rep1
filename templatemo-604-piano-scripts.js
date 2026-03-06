@@ -5,7 +5,104 @@ TemplateMo 604 Christmas Piano
 https://templatemo.com/tm-604-christmas-piano
 
 */
+// Sistema de autenticação
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuthStatus();
+    setupAuthUI();
+});
 
+function checkAuthStatus() {
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    
+    const authButtons = document.getElementById('authButtons');
+    const userAvatar = document.getElementById('userAvatar');
+    const userInitials = document.getElementById('userInitials');
+    
+    if (token && user.name) {
+        // Usuário logado
+        authButtons.style.display = 'none';
+        userAvatar.style.display = 'flex';
+        userInitials.textContent = user.name.charAt(0).toUpperCase();
+        
+        // Carregar configurações salvas do usuário
+        loadUserSettings();
+    } else {
+        // Usuário não logado
+        authButtons.style.display = 'flex';
+        userAvatar.style.display = 'none';
+    }
+}
+
+function setupAuthUI() {
+    // Botão de logout
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.reload();
+        });
+    }
+}
+
+async function loadUserSettings() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        const response = await fetch('http://localhost:3000/api/profile', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const user = await response.json();
+            localStorage.setItem('user', JSON.stringify(user));
+            
+            // Aplicar configurações salvas
+            if (user.settings) {
+                // Seus controles existentes
+                const speedSlider = document.getElementById('speedSlider');
+                const volumeSlider = document.getElementById('volumeSlider');
+                const repeatToggle = document.getElementById('repeatToggle');
+                
+                if (speedSlider) speedSlider.value = user.settings.speed;
+                if (volumeSlider) volumeSlider.value = user.settings.volume;
+                if (repeatToggle && user.settings.repeat) {
+                    repeatToggle.classList.add('active');
+                }
+                
+                // Atualizar valores na UI
+                updateSpeedDisplay();
+                updateVolumeDisplay();
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao carregar configurações:', error);
+    }
+}
+
+// Função para salvar configurações (chame quando o usuário mudar algo)
+async function saveUserSettings(settings) {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        await fetch('http://localhost:3000/api/settings', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(settings)
+        });
+    } catch (error) {
+        console.error('Erro ao salvar configurações:', error);
+    }
+}
 // ===== AUDIO ENGINE =====
 class PianoAudio {
    constructor() {
@@ -871,4 +968,5 @@ document.addEventListener('DOMContentLoaded', () => {
    initGallery();
    initForm();
    new ChristmasPiano();
+
 });
